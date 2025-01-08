@@ -24,7 +24,11 @@ final class LoginViewController: UIViewController {
     
     private lazy var emailTextField: CustomTextField = {
         let textField = CustomTextField()
-        textField.placeholder = "Enter email"
+        textField.configure(
+            placeholder: "Enter email",
+            icon: "email",
+            isPassword: false
+        )
         textField.keyboardType = .emailAddress
         textField.autocapitalizationType = .none
         return textField
@@ -32,14 +36,18 @@ final class LoginViewController: UIViewController {
     
     private lazy var passwordTextField: CustomTextField = {
         let textField = CustomTextField()
-        textField.placeholder = "Password"
-        textField.isSecureTextEntry = true
+        textField.configure(
+            placeholder: "Password",
+            icon: "password",
+            isPassword: true
+        )
         return textField
     }()
     
     private lazy var forgotPasswordButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Forgot password?", for: .normal)
+        button.contentHorizontalAlignment = .left
         button.titleLabel?.font = .systemFont(ofSize: 14)
         button.setTitleColor(.systemBlue, for: .normal)
         return button
@@ -61,21 +69,26 @@ final class LoginViewController: UIViewController {
         
         let orLabel = UILabel()
         orLabel.text = "or"
-        orLabel.textColor = UIColor(white: 1, alpha: 0.3)
+        orLabel.textColor = .white
         orLabel.font = .systemFont(ofSize: 14)
         orLabel.textAlignment = .center
         
         let stack = UIStackView(arrangedSubviews: [line1, orLabel, line2])
         stack.axis = .horizontal
-        stack.spacing = 16
+
+        stack.distribution = .fillEqually
         stack.alignment = .center
-        stack.distribution = .equalSpacing
+        orLabel.setContentHuggingPriority(.required, for: .horizontal)
+        orLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        line1.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        line2.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            
         return stack
     }()
     
     private func createDividerLine() -> UIView {
         let view = UIView()
-        view.backgroundColor = UIColor(white: 1, alpha: 0.1)
+        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.5)
         view.heightAnchor.constraint(equalToConstant: 1).isActive = true
         return view
     }
@@ -113,45 +126,46 @@ final class LoginViewController: UIViewController {
     }
     
     private func setupConstraints() {
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            
-            emailTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 40),
-            emailTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            emailTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            emailTextField.heightAnchor.constraint(equalToConstant: 52),
-            
-            passwordTextField.topAnchor.constraint(equalTo: emailTextField.bottomAnchor, constant: 16),
-            passwordTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            passwordTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            passwordTextField.heightAnchor.constraint(equalToConstant: 52),
-            
-            forgotPasswordButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 16),
-            forgotPasswordButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            
-            loginButton.topAnchor.constraint(equalTo: forgotPasswordButton.bottomAnchor, constant: 24),
-            loginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            loginButton.heightAnchor.constraint(equalToConstant: 52),
-            
-            dividerStack.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 32),
-            dividerStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            dividerStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            
-            googleLoginButton.topAnchor.constraint(equalTo: dividerStack.bottomAnchor, constant: 32),
-            googleLoginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            googleLoginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            googleLoginButton.heightAnchor.constraint(equalToConstant: 52),
-            
-            appleLoginButton.topAnchor.constraint(equalTo: googleLoginButton.bottomAnchor, constant: 16),
-            appleLoginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            appleLoginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            appleLoginButton.heightAnchor.constraint(equalToConstant: 52)
-        ])
-    }
+            NSLayoutConstraint.activate([
+                titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+                titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+                
+                emailTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 40),
+                emailTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+                emailTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+                emailTextField.heightAnchor.constraint(equalToConstant: 52),
+                
+                passwordTextField.topAnchor.constraint(equalTo: emailTextField.bottomAnchor, constant: 16),
+                passwordTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+                passwordTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+                passwordTextField.heightAnchor.constraint(equalToConstant: 52),
+                
+                forgotPasswordButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 16),
+                forgotPasswordButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+                forgotPasswordButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+                
+                loginButton.topAnchor.constraint(equalTo: forgotPasswordButton.bottomAnchor, constant: 24),
+                loginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+                loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+                loginButton.heightAnchor.constraint(equalToConstant: 52),
+                
+                dividerStack.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 32),
+                dividerStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+                dividerStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+                
+                appleLoginButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -60),
+                appleLoginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+                appleLoginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+                appleLoginButton.heightAnchor.constraint(equalToConstant: 52),
+                
+                googleLoginButton.bottomAnchor.constraint(equalTo: appleLoginButton.topAnchor, constant: -16),
+                googleLoginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+                googleLoginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+                googleLoginButton.heightAnchor.constraint(equalToConstant: 52)
+            ])
+        }
     
     private func setupBindings() {
-        // Your existing bindings code
+      
     }
 }

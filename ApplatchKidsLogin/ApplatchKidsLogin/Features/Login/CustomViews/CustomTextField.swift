@@ -5,35 +5,34 @@
 //  Created by Ben on 1/7/25.
 //
 
-
 import UIKit
 import Combine
 
-final class CustomTextField: UITextField {
+class CustomTextField: UITextField {
+    
     // MARK: - Properties
     private let iconView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor(white: 1, alpha: 0.3)
-        return imageView
+        let view = UIImageView()
+        view.contentMode = .scaleAspectFit
+        view.tintColor = .white
+        return view
     }()
     
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .white
-        return label
-    }()
-    
-    private let showPasswordButton: UIButton = {
+    private let eyeButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "eye.slash.fill"), for: .normal)
-        button.tintColor = UIColor(white: 1, alpha: 0.3)
+        button.setImage(UIImage(systemName: "eye.fill"), for: .normal)
+        button.tintColor = .white
         button.isHidden = true
         return button
     }()
     
-    var showPasswordTapped: (() -> Void)?
+    // For Combine
+    var textPublisher: AnyPublisher<String, Never> {
+        NotificationCenter.default
+            .publisher(for: UITextField.textDidChangeNotification, object: self)
+            .compactMap { ($0.object as? UITextField)?.text }
+            .eraseToAnyPublisher()
+    }
     
     // MARK: - Initialization
     override init(frame: CGRect) {
@@ -46,66 +45,82 @@ final class CustomTextField: UITextField {
     }
     
     // MARK: - Configuration
-    func configure(title: String, icon: String, isPassword: Bool = false) {
-        titleLabel.text = title
-        iconView.image = UIImage(systemName: icon)
-        showPasswordButton.isHidden = !isPassword
+    func configure(placeholder: String, icon: String, isPassword: Bool = false) {
+        self.attributedPlaceholder = NSAttributedString(
+            string: placeholder,
+            attributes: [.foregroundColor: UIColor.white.withAlphaComponent(0.5)]
+        )
+        self.iconView.image = UIImage(named: icon)?.withRenderingMode(.alwaysTemplate)
+        self.eyeButton.isHidden = !isPassword
         
         if isPassword {
-            showPasswordButton.addTarget(self, action: #selector(togglePasswordVisibility), for: .touchUpInside)
+            eyeButton.addTarget(self, action: #selector(togglePasswordVisibility), for: .touchUpInside)
         }
     }
     
-    // MARK: - Setup
+    // MARK: - UI Setup
     private func setupUI() {
-        backgroundColor = UIColor(white: 1, alpha: 0.08)
+        // Background and border
+        backgroundColor = UIColor(red: 0.06, green: 0.06, blue: 0.12, alpha: 1.0)
+        layer.borderWidth = 1
+        layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        layer.cornerRadius = 12
+        
+        // Text style
         textColor = .white
         tintColor = .white
         font = .systemFont(ofSize: 16)
-        layer.cornerRadius = 12
         
-        // Add title label
-        addSubview(titleLabel)
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Add icon container
+        // Add subviews
         addSubview(iconView)
+        addSubview(eyeButton)
+        
+        // Make sure subviews don't interfere with text field interaction
         iconView.translatesAutoresizingMaskIntoConstraints = false
+        eyeButton.translatesAutoresizingMaskIntoConstraints = false
         
-        // Add show password button
-        addSubview(showPasswordButton)
-        showPasswordButton.translatesAutoresizingMaskIntoConstraints = false
-        
+        setupConstraints()
+    }
+    
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: topAnchor, constant: -24),
-            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor),
-            
+            // Icon constraints
             iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             iconView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 20),
-            iconView.heightAnchor.constraint(equalToConstant: 20),
+            iconView.widthAnchor.constraint(equalToConstant: 24),
+            iconView.heightAnchor.constraint(equalToConstant: 24),
             
-            showPasswordButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            showPasswordButton.centerYAnchor.constraint(equalTo: centerYAnchor),
-            showPasswordButton.widthAnchor.constraint(equalToConstant: 24),
-            showPasswordButton.heightAnchor.constraint(equalToConstant: 24)
+            // Eye button constraints
+            eyeButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+            eyeButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+            eyeButton.widthAnchor.constraint(equalToConstant: 24),
+            eyeButton.heightAnchor.constraint(equalToConstant: 24)
         ])
     }
     
-    // MARK: - Text Rect
+    // MARK: - Text Rect Overrides
     override func textRect(forBounds bounds: CGRect) -> CGRect {
-        return bounds.inset(by: UIEdgeInsets(top: 0, left: 48, bottom: 0, right: showPasswordButton.isHidden ? 16 : 48))
+        return bounds.inset(by: UIEdgeInsets(
+            top: 0,
+            left: 50,
+            bottom: 0,
+            right: eyeButton.isHidden ? 16 : 50
+        ))
     }
     
     override func editingRect(forBounds bounds: CGRect) -> CGRect {
-        return bounds.inset(by: UIEdgeInsets(top: 0, left: 48, bottom: 0, right: showPasswordButton.isHidden ? 16 : 48))
+        return textRect(forBounds: bounds)
     }
     
-    // MARK: - Actions
+    override func placeholderRect(forBounds bounds: CGRect) -> CGRect {
+        return textRect(forBounds: bounds)
+    }
+    
+    // MARK: - Password Toggle
     @objc private func togglePasswordVisibility() {
         isSecureTextEntry.toggle()
-        let imageName = isSecureTextEntry ? "eye.slash.fill" : "eye.fill"
-        showPasswordButton.setImage(UIImage(systemName: imageName), for: .normal)
+        let imageName = isSecureTextEntry ? "eye.fill" : "eye.slash.fill"
+        eyeButton.setImage(UIImage(systemName: imageName), for: .normal)
     }
 }
 
